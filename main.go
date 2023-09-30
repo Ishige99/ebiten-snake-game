@@ -8,12 +8,23 @@ import (
 )
 
 const (
-	// game screen size: pixel
+	// game screen's pixel size
 	screenWidth  = 320
 	screenHeight = 240
 
+	// 1 tile's pixel size
 	tileSize = 5
 )
+
+type Game struct {
+	snake         *Snake
+	food          *Food
+	score         int
+	gameOver      bool
+	ticks         int
+	updateCounter int
+	speed         int
+}
 
 func main() {
 	// generate seed values to add game randomness
