@@ -15,6 +15,19 @@ const (
 	tileSize = 5
 )
 
+type Point struct {
+	// x and y coordinates struct
+	X int
+	Y int
+}
+
+type Snake struct {
+	// snake struct
+	Body        []Point
+	Direction   Point
+	GrowCounter int
+}
+
 func main() {
 	// generate seed values to add game randomness
 	rand.Seed(uint64(time.Now().UnixNano()))
