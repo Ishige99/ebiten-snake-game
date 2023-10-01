@@ -1,8 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/text"
+	"github.com/hajimehoshi/ebiten/v2/vector"
+	"golang.org/x/image/font/basicfont"
+	"image/color"
 	"log"
 	"math/rand"
 	"time"
@@ -87,6 +92,46 @@ func (g *Game) Update() error {
 	}
 
 	return nil
+}
+
+func (g *Game) Draw(screen *ebiten.Image) {
+	screen.Fill(color.RGBA{R: 0, G: 0, B: 0, A: 255})
+
+	for _, p := range g.snake.Body {
+		vector.DrawFilledRect(
+			screen,
+			float32(p.X*tileSize),
+			float32(p.Y*tileSize),
+			tileSize,
+			tileSize,
+			color.RGBA{R: 0, G: 255, B: 0, A: 255},
+			true,
+		)
+	}
+
+	vector.DrawFilledRect(
+		screen,
+		float32(g.food.Position.X*tileSize),
+		float32(g.food.Position.Y*tileSize),
+		tileSize,
+		tileSize,
+		color.RGBA{R: 255, G: 0, B: 0, A: 255},
+		true,
+	)
+
+	face := basicfont.Face7x13
+
+	if g.gameOver {
+		text.Draw(screen, "Game Over", face, screenWidth/2-40, screenHeight/2, color.White)
+		text.Draw(screen, "Press 'R' to restart", face, screenWidth/2-60, screenHeight/2+16, color.White)
+	}
+
+	scoreText := fmt.Sprintf("Score: %d", g.score)
+	text.Draw(screen, scoreText, face, 5, screenHeight-5, color.White)
+}
+
+func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	return 320, 240
 }
 
 func main() {
