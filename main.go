@@ -161,3 +161,11 @@ func main() {
 		log.Fatal(err)
 	}
 }
+
+func (g *Game) restart() {
+	g.snake = NewSnake()
+	g.score = 0
+	g.gameOver = false
+	g.food = NewFood()
+	g.speed = 10
+}
