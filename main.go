@@ -32,10 +32,12 @@ type Game struct {
 	speed         int
 }
 
+// Update proceeds the game state.
+// Update is called every tick (1/60 [s] by default).
 func (g *Game) Update() error {
-	// リスタート
+	// ゲームオーバー状態を処理
 	if g.gameOver {
-		// ユーザーの押したキーを判定
+		// Rキーが押されたかどうかを判定し、押されていればrestart
 		// `IsKeyJustPressed()`: https://pkg.go.dev/github.com/hajimehoshi/ebiten/v2/inpututil#IsKeyJustPressed
 		if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 			g.restart()
@@ -43,15 +45,18 @@ func (g *Game) Update() error {
 		return nil
 	}
 
-	//
+	// ゲームの更新カウンターを制御。
+	// フレームごとに実行をして、速さよりもカウンターが小さければ早期リターンをして、以後の処理をスキップをする。（蛇の速度を制御する目的）
 	g.updateCounter++
 	if g.updateCounter < g.speed {
 		return nil
 	}
 	g.updateCounter = 0
 
+	// 蛇の移動
 	g.snake.Move()
 
+	// キーボード入力を監視して蛇の移動方向を変更
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) && g.snake.Direction.X == 0 {
 		g.snake.Direction = Point{X: -1, Y: 0}
 	}
@@ -65,12 +70,14 @@ func (g *Game) Update() error {
 		g.snake.Direction = Point{X: 0, Y: 1}
 	}
 
+	// 蛇の頭部の位置が画面外に出た場合、ゲームオーバーとなる
 	head := g.snake.Body[0]
 	if head.X < 0 || head.Y < 0 || head.X >= screenWidth/tileSize || head.Y >= screenHeight/tileSize {
 		g.gameOver = true
 		g.speed = 10
 	}
 
+	// 蛇が自分自身と衝突した場合、ゲームオーバーとなる
 	for _, part := range g.snake.Body[1:] {
 		if head.X == part.X && head.Y == part.Y {
 			g.gameOver = true
@@ -78,14 +85,13 @@ func (g *Game) Update() error {
 		}
 	}
 
+	// 蛇が食べ物を食べた場合の処理
 	if head.X == g.food.Position.X && head.Y == g.food.Position.Y {
-		g.score++
-		g.snake.GrowCounter += 1
-		g.food = NewFood()
-		g.score++
-		g.food = NewFood()
-		g.snake.GrowCounter = 1
+		g.score++                // スコア+1
+		g.snake.GrowCounter += 1 // 蛇の長さ+1
+		g.food = NewFood()       // 新しいfoodの生成
 
+		// 蛇の速度を上げる（早くなりすぎないようには制御：8回まで）
 		if g.speed > 2 {
 			g.speed--
 		}
@@ -95,9 +101,12 @@ func (g *Game) Update() error {
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
+	// ゲーム背景を黒で塗りつぶし
 	screen.Fill(color.RGBA{R: 0, G: 0, B: 0, A: 255})
 
+	// 蛇の体を描画
 	for _, p := range g.snake.Body {
+		// 蛇の1つ1つのセグメントを緑で塗りつぶし
 		vector.DrawFilledRect(
 			screen,
 			float32(p.X*tileSize),
@@ -109,6 +118,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		)
 	}
 
+	// 食べ物を描画（赤色）
 	vector.DrawFilledRect(
 		screen,
 		float32(g.food.Position.X*tileSize),
@@ -119,13 +129,14 @@ func (g *Game) Draw(screen *ebiten.Image) {
 		true,
 	)
 
+	// ゲームオーバー画面の表示
 	face := basicfont.Face7x13
-
 	if g.gameOver {
 		text.Draw(screen, "Game Over", face, screenWidth/2-40, screenHeight/2, color.White)
 		text.Draw(screen, "Press 'R' to restart", face, screenWidth/2-60, screenHeight/2+16, color.White)
 	}
 
+	// スコアの表示
 	scoreText := fmt.Sprintf("Score: %d", g.score)
 	text.Draw(screen, scoreText, face, 5, screenHeight-5, color.White)
 }
